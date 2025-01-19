@@ -1,4 +1,4 @@
-name: Argo CD Sync Workflow
+name: Argo CD Create and Sync Application
 
 on:
   push:
@@ -9,19 +9,30 @@ on:
       - main
 
 jobs:
-  sync-argo-app:
+  create-sync-argo-app:
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Install Argo CD CLI
         run: |
           curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.2.4/argocd-linux-amd64
           chmod +x /usr/local/bin/argocd
-      - name: Argo CD Sync Application
-        uses: clowdhaus/argo-cd-action@v1.9.0
-        with:
-          command: sync
-          options: --app myapp-argo-application --path dev  --namespace myapp
-          version: 2.2.4
+          
+      - name: Create Argo CD Application
+        run: |
+          argocd app create myapp-argo-application \
+            --repo https://github.com/bbz1024/argocd-lab.git \
+            --path dev \
+            --dest-server https://kubernetes.default.svc \
+            --dest-namespace myapp \
+            --sync-policy automated \
+            --sync-option CreateNamespace=true \
+            --self-heal \
+            --prune
+
+      - name: Sync Argo CD Application
+        run: |
+          argocd app sync myapp-argo-application --namespace myapp
