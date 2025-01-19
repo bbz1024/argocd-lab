@@ -1,0 +1,26 @@
+name: Argo CD Sync Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  sync-argo-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install Argo CD CLI
+        run: |
+          curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.2.4/argocd-linux-amd64
+          chmod +x /usr/local/bin/argocd
+      - name: Argo CD Action - Sync Application
+        uses: clowdhaus/argo-cd-action@v1.9.0
+        with:
+          command: sync
+          options: --app myapp-argo-application --path dev
+          version: 2.2.4
